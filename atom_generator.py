@@ -167,7 +167,7 @@ def get_nucleus_radius_from_mass(atomic_num):
 
     mass = atomic_masses[atomic_num - 1]
     # Nuclear radius proportional to cube root of mass number (realistic nuclear physics)
-    base_radius = 6 + (mass ** (1/3)) * 1.2
+    base_radius = 6 + (mass ** (1/3)) * 1.8
     return max(4, min(int(base_radius), 25))  # Clamp between 4-25 pixels
 
 def get_electron_shells(atomic_num):
@@ -207,12 +207,12 @@ def calculate_orbit_spacing(atomic_num, nucleus_radius, num_shells):
 
 def generate_atom_image(atomic_num, scale_factor=1.0, image_size=1200):
     """
-    Generate ULTRA HIGH RESOLUTION atomic structure image (1200px for maximum crispness)
+    Generate HIGH RESOLUTION atomic structure image with black electrons and nucleus size based on mass
 
     Args:
         atomic_num: Atomic number of element
         scale_factor: Overall scaling factor
-        image_size: Size of output image (square) - ULTRA HIGH RES 1200px
+        image_size: Size of output image (square) - INCREASED for better quality
 
     Returns:
         PIL Image object
@@ -225,7 +225,7 @@ def generate_atom_image(atomic_num, scale_factor=1.0, image_size=1200):
     nucleus_color = element_group_colors.get(group_type, "#FFFFFF")
     orbit_color = orbital_colors.get(group_type, "#808080")
 
-    # Create image with transparent background - ULTRA HIGH RESOLUTION
+    # Create image with transparent background - HIGHER RESOLUTION
     img = Image.new('RGBA', (image_size, image_size), (255, 255, 255, 0))
     draw = ImageDraw.Draw(img)
 
@@ -233,29 +233,29 @@ def generate_atom_image(atomic_num, scale_factor=1.0, image_size=1200):
 
     # NUCLEUS SIZE based on atomic mass
     nucleus_radius = get_nucleus_radius_from_mass(atomic_num)
-    nucleus_radius = int(nucleus_radius * scale_factor * (image_size / 400))  # Scale with ultra high image size
+    nucleus_radius = int(nucleus_radius * scale_factor * (image_size / 400))  # Scale with image size
 
     # Get electron configuration
     electron_shells = get_electron_shells(atomic_num)
 
     # Calculate orbit spacing based on atomic size
     shell_spacing = calculate_orbit_spacing(atomic_num, nucleus_radius, len(electron_shells))
-    shell_spacing = int(shell_spacing * scale_factor * (image_size / 400))  # Scale with ultra high image size
+    shell_spacing = int(shell_spacing * scale_factor * (image_size / 400))  # Scale with image size
 
     # Ensure the entire atom fits within the image
-    max_distance = nucleus_radius + (len(electron_shells) * shell_spacing) + 30
+    max_distance = nucleus_radius + (len(electron_shells) * shell_spacing) + 20
     if max_distance * 2 > image_size * 0.8:  # Leave 20% margin
         scaling_factor = (image_size * 0.4) / max_distance
-        nucleus_radius = max(int(10 * image_size / 400), int(nucleus_radius * scaling_factor))
-        shell_spacing = max(int(12 * image_size / 400), int(shell_spacing * scaling_factor))
+        nucleus_radius = max(int(6 * image_size / 400), int(nucleus_radius * scaling_factor))
+        shell_spacing = max(int(8 * image_size / 400), int(shell_spacing * scaling_factor))
 
-    # Draw electron orbits with colored rings - ULTRA HIGH RES
+    # Draw electron orbits with colored rings
     shell_distances = []
-    orbit_width = max(3, int(5 * image_size / 400))  # Scale line width for ultra high res
+    orbit_width = 4  # Scale line width
 
     for i, electrons in enumerate(electron_shells):
         if electrons > 0:
-            distance = nucleus_radius + int(20 * image_size / 400) + (i * shell_spacing)
+            distance = nucleus_radius + int(15 * image_size / 400) + (i * shell_spacing)
             shell_distances.append(distance)
 
             # Draw colored orbital path
@@ -263,8 +263,8 @@ def generate_atom_image(atomic_num, scale_factor=1.0, image_size=1200):
                          center_x + distance, center_y + distance],
                         outline=orbit_color, width=orbit_width)
 
-    # Draw BLACK electrons with PROPER size for ultra high resolution
-    electron_radius = max(6, int(8 * image_size / 400))  # Scale electron size with ultra high image
+    # Draw BLACK electrons with FIXED size relative to image
+    electron_radius = 10  # Scale electron size with image
 
     for shell_idx, (electrons, distance) in enumerate(zip(electron_shells, shell_distances)):
         if electrons <= 0:
@@ -284,20 +284,20 @@ def generate_atom_image(atomic_num, scale_factor=1.0, image_size=1200):
             electron_x = center_x + distance * math.cos(angle)
             electron_y = center_y + distance * math.sin(angle)
 
-            # Draw electron as BLACK circle - ULTRA HIGH RES
+            # Draw electron as BLACK circle
             draw.ellipse([electron_x - electron_radius, electron_y - electron_radius,
                          electron_x + electron_radius, electron_y + electron_radius],
                         fill="#000000")  # BLACK electrons
 
-    # Draw nucleus with element group color (NO outline) - ULTRA HIGH RES
+    # Draw nucleus with element group color (NO outline)
     draw.ellipse([center_x - nucleus_radius, center_y - nucleus_radius,
                  center_x + nucleus_radius, center_y + nucleus_radius],
                 fill=nucleus_color)
 
     return img
 
-def save_atom_image(atomic_num, scale_factor=1.0, filename=None, image_size=1200):
-    """Save ULTRA HIGH RESOLUTION atomic image to file"""
+def save_atom_image(atomic_num, scale_factor=1.0, filename=None, image_size=800):
+    """Save HIGH RESOLUTION atomic image to file"""
     if filename is None:
         symbol = symbols[atomic_num - 1]
         filename = f"atom_{atomic_num}_{symbol}.png"
@@ -307,18 +307,18 @@ def save_atom_image(atomic_num, scale_factor=1.0, filename=None, image_size=1200
     return filename
 
 def generate_all_atom_images(max_atomic_num=118, base_scale=1.0):
-    """Generate ULTRA HIGH RESOLUTION images for all elements"""
+    """Generate HIGH RESOLUTION images for all elements"""
 
     for atomic_num in range(1, min(max_atomic_num + 1, len(symbols) + 1)):
         try:
-            # Generate ultra high resolution images
-            filename = save_atom_image(atomic_num, base_scale, image_size=1200)
+            # Generate high resolution images
+            filename = save_atom_image(atomic_num, base_scale, image_size=800)
         except Exception as e:
             print(f"Error generating image for atomic number {atomic_num}: {e}")
 
 if __name__ == "__main__":
-    print("🔬 Generating ULTRA HIGH RESOLUTION atomic images (1200px)...")
-    print("✅ Features: BLACK electrons, nucleus size from mass, maximum quality")
+    print("🔬 Generating HIGH RESOLUTION atomic images...")
+    print("✅ Features: BLACK electrons, nucleus size from mass, better quality")
 
     # Test a few representative elements
     test_elements = [1, 2, 6, 11, 18, 36]
@@ -327,9 +327,9 @@ if __name__ == "__main__":
             mass = atomic_masses[atomic_num - 1]
             nucleus_r = get_nucleus_radius_from_mass(atomic_num)
             vdw_radius = get_van_der_waals_radius(atomic_num)
-            filename = save_atom_image(atomic_num, scale_factor=1.0, image_size=1200)
+            filename = save_atom_image(atomic_num, scale_factor=1.0, image_size=800)
             print(f"✅ Generated atom {atomic_num} ({symbols[atomic_num-1]}): mass={mass:.3f}u, nucleus={nucleus_r}px, vdW={vdw_radius}pm -> {filename}")
         except Exception as e:
             print(f"❌ Error with atom {atomic_num}: {e}")
 
-    print("🎉 ULTRA HIGH RESOLUTION generation completed!")
+    print("🎉 HIGH RESOLUTION generation completed!")

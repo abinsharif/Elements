@@ -12,7 +12,6 @@ pip install reportlab pillow watchdog
 
 - `main.py` - Main program to generate element cards with atomic images
 - `atom_generator.py` - Generates atomic structure images based on atomic number
-- `card_tester.py` - Interactive tester for single element cards with auto-reload
 - `data.py` - Contains all element data (symbols, names, properties, uses, trivia, etc.)
 
 ## How to Use
@@ -28,25 +27,8 @@ This will:
 - Create `element_cards_with_atoms_4x5.pdf` with all elements
 - Each card includes: name, symbol, atomic number, mass, use, description, trivia, and atomic structure image
 
-### 2. Test Individual Elements (Interactive Mode)
 
-```bash
-python card_tester.py
-```
-
-This will:
-- Generate a test card for element #1 (Hydrogen) by default
-- Start file monitoring mode
-- Auto-regenerate the card when you edit the file
-- Output saved as `test_card.pdf`
-
-To test different elements:
-1. Open `card_tester.py`
-2. Change `TEST_ATOMIC_NUMBER = 1` to any number 1-118
-3. Save the file
-4. The card automatically regenerates
-
-### 3. Generate Individual Atomic Images
+### 4. Generate Individual Atomic Images
 
 ```python
 from atom_generator import save_atom_image

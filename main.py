@@ -1,373 +1,281 @@
+# main.py
+# Perfect print-and-play element cards generator
+
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors as reportlab_colors
 import math
 import os
-from data import (symbols, names, atomic_numbers, atomic_masses, group_types, 
-                 element_uses, element_descriptions, element_trivia, is_radioactive,
-                 element_group_colors, orbital_colors)
-from atom_generator import generate_atom_image
+from data import (symbols, names, atomic_numbers, atomic_masses, group_types,
+                  element_uses, element_descriptions, element_trivia, is_radioactive,
+                  element_group_colors)
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
-# GENERATION CONTROL
-REGENERATE_ATOMIC_IMAGES = False  # Set to True to force regeneration of all atomic images
-NUMBER_OF_CARDS_TO_GENERATE = 118  # Set to any number (1-118) to generate specific amount of cards
+pdfmetrics.registerFont(TTFont('Oxygen', 'Oxygen-Light.ttf'))
+pdfmetrics.registerFont(TTFont('Oxygen-Bold', 'Oxygen-Bold.ttf'))
 
-# PAGE CONFIGURATION
-page_size = A4
-page_width, page_height = page_size
-grid_size = '4x5'
-num_cols, num_rows = map(int, grid_size.split('x'))
-num_per_page = num_cols * num_rows
+# ========== CONFIG ==========
+PAGE_SIZE = A4
+PAGE_W, PAGE_H = PAGE_SIZE
 
-# CARD DIMENSIONS - EXACT measurements from reference
-card_width = page_width / num_cols
-card_height = page_height / num_rows
+GRID = "4x5"
+NUM_COLS, NUM_ROWS = map(int, GRID.split("x"))
+NUM_PER_PAGE = NUM_COLS * NUM_ROWS
+NUM_CARDS = 118
 
-# ========== EXACT POSITIONING based on reference image analysis ==========
+OUTPUT_PDF = f"element_cards_PERFECT_{NUM_CARDS}_cards_{GRID}.pdf"
+ATOMIC_IMAGES_DIR = "atomic_images"
 
-# 1. Green circle with atomic number (TOP LEFT)
-circle_x_offset = 18
-circle_y_from_top = 18
-circle_radius = 14
-circle_color = "#4CAF50"  # Green
-number_font_size = 14
-number_color = reportlab_colors.white
-number_font_name = "Helvetica-Bold"
+CARD_W = PAGE_W / NUM_COLS
+CARD_H = PAGE_H / NUM_ROWS
 
-# 2. Element use text (TOP CENTER - horizontal)
-use_x_center = card_width * 0.45
-use_y_from_top = 22
-use_font_size = 11
-use_color = reportlab_colors.black
-use_font_name = "Helvetica"
+BORDER_WIDTH = 0.2
+BORDER_COLOR = reportlab_colors.black
 
-# 3. Large element symbol (TOP RIGHT)
-symbol_x_offset = 20  # From right edge
-symbol_y_from_top = 12
-symbol_font_size = 42  # Very large like reference
-symbol_color = reportlab_colors.black
-symbol_font_name = "Helvetica-Bold"
+# Circle (top-left) with atomic number
+CIRCLE_RADIUS = 15
+CIRCLE_OFFSET_X = 18
+CIRCLE_OFFSET_Y = 18
+CIRCLE_NUMBER_FONT = ("Oxygen-Bold", 14)
+CIRCLE_NUMBER_COLOR = reportlab_colors.black
 
-# 4. Atomic mass (RIGHT SIDE, below symbol)
-mass_x_offset = 20  # From right edge  
-mass_y_from_top = 52
-mass_font_size = 11
-mass_color = reportlab_colors.black
-mass_font_name = "Helvetica"
+# Symbol and mass (centered horizontally)
+SYMBOL_FONT = ("Oxygen-Bold", 28)
+SYMBOL_Y_OFFSET = 48  # distance from top of card to symbol baseline
+SYMBOL_RIGHT_MARGIN = 4  # distance from right edge of card to right edge of symbol
 
-# 5. Green rounded rectangle with element name (LEFT SIDE - vertical)
-name_rect_x_offset = 8  # From left edge
-name_rect_y_start = card_height * 0.25  # Start position
-name_rect_width = 24
-name_rect_height = card_height * 0.5  # Half the card height
-name_rect_color = "#4CAF50"  # Green background
-name_rect_radius = 12  # Rounded corners
-name_font_size = 11
-name_color = reportlab_colors.white
-name_font_name = "Helvetica-Bold"
+MASS_FONT = ("Oxygen", 8)
+MASS_Y_OFFSET = 68  # distance from top of card to mass baseline
 
-# 6. Atomic image (CENTER area)
-atomic_image_size = 35  # Small like reference
-atomic_image_x = card_width * 0.4  # Center-left
-atomic_image_y = card_height * 0.45  # Middle
+# Use text (top-center, centered horizontally)
+USE_FONT = ("Oxygen", 12)
+USE_Y_OFFSET = 15  # distance from top of card to use text baseline
 
-# 7. Description text - VERTICAL on right side (like reference)
-desc_right_x_offset = 12  # From right edge
-desc_right_y_center = card_height * 0.6  # Center vertically
-desc_right_font_size = 8
-desc_right_color = reportlab_colors.black
-desc_right_font_name = "Helvetica"
+# Name pill (left vertical half-round, centered at half height)
+NAME_PILL_WIDTH = 48
+NAME_PILL_HEIGHT = CARD_H * 0.6
+NAME_PILL_RADIUS = NAME_PILL_WIDTH / 2
+NAME_PILL_OFFSET_X = -NAME_PILL_WIDTH / 2
+NAME_PILL_OFFSET_Y = (CARD_H - NAME_PILL_HEIGHT) / 2
 
-# 8. Bottom description text (BOTTOM area)
-desc_bottom_x_margin = 12
-desc_bottom_y_from_bottom = 25
-desc_bottom_font_size = 9
-desc_bottom_color = reportlab_colors.black
-desc_bottom_font_name = "Helvetica"
-desc_bottom_max_width = card_width - (2 * desc_bottom_x_margin)
+NAME_FONT = ("Oxygen", 15)
+NAME_TEXT_COLOR = reportlab_colors.black
 
-# Card border
-border_width = 2
-border_color = reportlab_colors.black
+# Atomic image (center)
+ATOM_IMAGE_SIZE = min(CARD_W, CARD_H)
+ATOM_IMAGE_CENTER_X = CARD_W / 2
+ATOM_IMAGE_CENTER_Y = CARD_H / 2
 
-def hex_to_reportlab_color(hex_color):
-    """Convert hex color to reportlab Color object"""
-    hex_color = hex_color.lstrip('#')
-    r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
-    return reportlab_colors.Color(r/255.0, g/255.0, b/255.0)
+# Nuclear icon (bottom-right)
+NUCLEAR_ICON_FILE = os.path.join(ATOMIC_IMAGES_DIR, "nuclear.png")
+NUCLEAR_ICON_SIZE = 12
+NUCLEAR_ICON_OFFSET_X = 4
+NUCLEAR_ICON_OFFSET_Y = 4
 
-def draw_rounded_rect(canvas_obj, x, y, width, height, radius, fill_color):
-    """Draw a rounded rectangle"""
-    canvas_obj.setFillColor(fill_color)
-    # Draw main rectangle
-    canvas_obj.rect(x + radius, y, width - 2*radius, height, fill=1, stroke=0)
-    canvas_obj.rect(x, y + radius, width, height - 2*radius, fill=1, stroke=0)
-    # Draw corner circles
-    canvas_obj.circle(x + radius, y + radius, radius, fill=1, stroke=0)
-    canvas_obj.circle(x + width - radius, y + radius, radius, fill=1, stroke=0)
-    canvas_obj.circle(x + radius, y + height - radius, radius, fill=1, stroke=0)
-    canvas_obj.circle(x + width - radius, y + height - radius, radius, fill=1, stroke=0)
+# Right-side vertical description (centered at half height)
+DESC_RIGHT_FONT = ("Oxygen", 8)
+DESC_RIGHT_OFFSET_X = 12
+DESC_RIGHT_CENTER_Y = CARD_H / 2
 
-def wrap_text(canvas_obj, text, max_width, font_name, font_size):
-    """Wrap text to fit within specified width"""
+# Bottom trivia (centered)
+TRIVIA_FONT = ("Oxygen", 8)
+TRIVIA_Y_OFFSET = 5
+TRIVIA_MAX_LINES = 3
+TRIVIA_MAX_WIDTH = CARD_W - 24
+TRIVIA_X_CENTER = True
+
+# Helper: convert hex color to reportlab color
+def hex_to_color(hexcolor):
+    h = hexcolor.lstrip("#")
+    r, g, b = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+    return reportlab_colors.Color(r / 255.0, g / 255.0, b / 255.0)
+
+# Draw rounded rectangle helper
+def draw_rounded_rect(c, x, y, w, h, r, fill_color):
+    c.setFillColor(fill_color)
+    c.rect(x + r, y, w - 2*r, h, fill=1, stroke=0)
+    c.rect(x, y + r, w, h - 2*r, fill=1, stroke=0)
+    c.circle(x + r, y + r, r, fill=1, stroke=0)
+    c.circle(x + r, y + h - r, r, fill=1, stroke=0)
+    c.circle(x + w - r, y + r, r, fill=1, stroke=0)
+    c.circle(x + w - r, y + h - r, r, fill=1, stroke=0)
+
+# Text wrap helper
+def wrap_text(c, text, max_width, font_name, font_size):
     words = text.split()
     lines = []
-    current_line = []
-
-    for word in words:
-        test_line = ' '.join(current_line + [word])
-        text_width = canvas_obj.stringWidth(test_line, font_name, font_size)
-
-        if text_width <= max_width:
-            current_line.append(word)
+    cur = []
+    for w in words:
+        attempt = " ".join(cur + [w])
+        if c.stringWidth(attempt, font_name, font_size) <= max_width:
+            cur.append(w)
         else:
-            if current_line:
-                lines.append(' '.join(current_line))
-                current_line = [word]
-            else:
-                lines.append(word)
-
-    if current_line:
-        lines.append(' '.join(current_line))
-
+            if cur:
+                lines.append(" ".join(cur))
+            cur = [w]
+    if cur:
+        lines.append(" ".join(cur))
     return lines
 
-def check_atomic_images_exist():
-    """Check if atomic images already exist"""
-    images_dir = "atomic_images"
-    if not os.path.exists(images_dir):
-        return False
-
-    existing_count = 0
-    for i in range(1, min(NUMBER_OF_CARDS_TO_GENERATE + 1, len(symbols) + 1)):
-        symbol = symbols[i - 1]
-        filename = os.path.join(images_dir, f"atom_{i}_{symbol}.png")
-        if os.path.exists(filename):
-            existing_count += 1
-
-    expected_count = min(NUMBER_OF_CARDS_TO_GENERATE, len(symbols))
-    return existing_count >= (expected_count * 0.8)
-
-def generate_atomic_images_for_elements(max_elements=None, force_regenerate=False):
-    """Pre-generate ULTRA HIGH RESOLUTION atomic images"""
-
-    if not force_regenerate and check_atomic_images_exist():
-        print("✅ Atomic images already exist, skipping generation.")
-        print("   Set REGENERATE_ATOMIC_IMAGES = True to force regeneration.")
-        return []
-
-    if max_elements is None:
-        max_elements = min(NUMBER_OF_CARDS_TO_GENERATE, len(names))
-
-    print(f"🔬 Generating ULTRA HIGH RES atomic images for {max_elements} elements...")
-
-    images_dir = "atomic_images"
-    if not os.path.exists(images_dir):
-        os.makedirs(images_dir)
-
-    generated_files = []
-
-    for i in range(min(max_elements, len(names))):
-        atomic_num = i + 1
-
-        filename = os.path.join(images_dir, f"atom_{atomic_num}_{symbols[i]}.png")
-
-        try:
-            # Generate ULTRA HIGH RESOLUTION atomic image (1200px)
-            atom_img = generate_atom_image(atomic_num, scale_factor=1.0, image_size=1200)
-            atom_img.save(filename)
-            generated_files.append(filename)
-
-            if atomic_num % 20 == 0:
-                print(f"   Generated {atomic_num} ultra high resolution atomic images...")
-
-        except Exception as e:
-            print(f"❌ Error generating image for {symbols[i]} (#{atomic_num}): {e}")
-
-    print(f"✅ Generated {len(generated_files)} ULTRA HIGH RES atomic images in '{images_dir}' directory")
-    return generated_files
-
-def create_element_cards_with_atoms(grid_input=grid_size, output_filename=None, 
-                                   generate_atoms=True, num_cards=None):
-    """Create PDF with EXACT layout matching reference image"""
-
-    if num_cards is None:
-        num_cards = NUMBER_OF_CARDS_TO_GENERATE
-
-    # Calculate pages needed
-    num_per_page = num_cols * num_rows
-    pages_needed = math.ceil(num_cards / num_per_page)
-
-    if output_filename is None:
-        output_filename = f"element_cards_PERFECT_{num_cards}_cards_{grid_input}.pdf"
-
-    try:
-        cols, rows = map(int, grid_input.lower().split('x'))
-        if not (1 <= cols <= 10 and 1 <= rows <= 10):
-            raise ValueError("Columns and rows must be between 1 and 10")
-    except Exception as e:
-        print(f"Invalid input format or range: {e}")
-        return
-
-    # Generate atomic images if requested
-    if generate_atoms:
-        generate_atomic_images_for_elements(max_elements=num_cards, force_regenerate=REGENERATE_ATOMIC_IMAGES)
-
-    # Recalculate dimensions if different grid size
-    if grid_input != grid_size:
-        global card_width, card_height
-        card_width = page_width / cols
-        card_height = page_height / rows
-        global atomic_image_x, atomic_image_y, desc_bottom_max_width
-        atomic_image_x = card_width * 0.4
-        atomic_image_y = card_height * 0.45
-        desc_bottom_max_width = card_width - (2 * desc_bottom_x_margin)
-
-    c = canvas.Canvas(output_filename, pagesize=page_size)
-    images_dir = "atomic_images"
+def create_cards(output_pdf=OUTPUT_PDF, num_cards=NUM_CARDS, grid=f"{NUM_COLS}x{NUM_ROWS}"):
+    cols, rows = map(int, grid.split("x"))
+    c = canvas.Canvas(output_pdf, pagesize=PAGE_SIZE)
 
     element_idx = 0
-    for page in range(pages_needed):
+    for page in range(math.ceil(num_cards / (cols * rows))):
         for row in range(rows):
             for col in range(cols):
-                if element_idx >= num_cards or element_idx >= len(names):
-                    continue
+                if element_idx >= num_cards:
+                    break
 
-                # Calculate card position
-                x = col * card_width
-                y = page_height - (row + 1) * card_height
+                card_x = col * CARD_W
+                card_y = PAGE_H - (row + 1) * CARD_H
 
-                # ========== DRAW ATOMIC IMAGE FIRST (background) ==========
-                atomic_num = element_idx + 1
+                # Data for this element
+                atomic_num = atomic_numbers[element_idx]
                 symbol = symbols[element_idx]
-                atom_image_file = os.path.join(images_dir, f"atom_{atomic_num}_{symbol}.png")
-
-                # Position atomic image (center area like reference)
-                img_x = x + atomic_image_x - (atomic_image_size / 2)
-                img_y = y + atomic_image_y - (atomic_image_size / 2)
-
-                if os.path.exists(atom_image_file):
-                    try:
-                        c.drawImage(atom_image_file, img_x, img_y, 
-                                   atomic_image_size, atomic_image_size,
-                                   mask='auto')
-                    except Exception as e:
-                        print(f"❌ Error embedding image for {symbol}: {e}")
-
-                # ========== EXACT LAYOUT ELEMENTS (pixel perfect) ==========
-
-                # Card border (EXACT like reference)
-                c.setStrokeColor(border_color)
-                c.setLineWidth(border_width)
-                c.rect(x, y, card_width, card_height, fill=0, stroke=1)
-
-                # 1. GREEN CIRCLE with atomic number (TOP LEFT)
-                circle_x = x + circle_x_offset
-                circle_y = y + card_height - circle_y_from_top
-                c.setFillColor(hex_to_reportlab_color(circle_color))
-                c.circle(circle_x, circle_y, circle_radius, fill=1, stroke=0)
-
-                # White number inside circle
-                c.setFillColor(number_color)
-                c.setFont(number_font_name, number_font_size)
-                num_text = str(atomic_numbers[element_idx])
-                num_width = c.stringWidth(num_text, number_font_name, number_font_size)
-                c.drawString(circle_x - num_width/2, circle_y - number_font_size/2 + 3, num_text)
-
-                # 2. Element use text (TOP CENTER - horizontal like reference)
-                c.setFillColor(use_color)
-                c.setFont(use_font_name, use_font_size)
+                name = names[element_idx]
                 use_text = element_uses[element_idx]
-                use_width = c.stringWidth(use_text, use_font_name, use_font_size)
-                c.drawString(
-                    x + use_x_center - use_width/2,
-                    y + card_height - use_y_from_top,
-                    use_text
-                )
+                mass_text = str(atomic_masses[element_idx])
+                desc_right = element_descriptions[element_idx]
+                trivia = element_trivia[element_idx]
+                group = group_types[element_idx]
+                group_color_hex = element_group_colors.get(group, "#4CAF50")
+                group_color = hex_to_color(group_color_hex)
 
-                # 3. Large element symbol (TOP RIGHT - EXACT position)
-                c.setFillColor(symbol_color)
-                c.setFont(symbol_font_name, symbol_font_size)
-                symbol_width = c.stringWidth(symbol, symbol_font_name, symbol_font_size)
-                c.drawString(
-                    x + card_width - symbol_x_offset - symbol_width,
-                    y + card_height - symbol_y_from_top - symbol_font_size,
-                    symbol
-                )
+                # --- Draw half-pill first (so border can overlap it) ---
+                pill_x = card_x + NAME_PILL_OFFSET_X
+                pill_y = card_y + NAME_PILL_OFFSET_Y
 
-                # 4. Atomic mass (RIGHT SIDE, below symbol - EXACT position)
-                c.setFillColor(mass_color)
-                c.setFont(mass_font_name, mass_font_size)
-                mass_text = f"{atomic_masses[element_idx]}"
-                mass_width = c.stringWidth(mass_text, mass_font_name, mass_font_size)
-                c.drawString(
-                    x + card_width - mass_x_offset - mass_width,
-                    y + card_height - mass_y_from_top,
-                    mass_text
-                )
-
-                # 5. Green rounded rectangle with element name (LEFT SIDE - EXACT like reference)
-                element_name = names[element_idx]
-
-                # Draw green rounded rectangle background
-                rect_x = x + name_rect_x_offset
-                rect_y = y + name_rect_y_start
-                draw_rounded_rect(c, rect_x, rect_y, name_rect_width, name_rect_height, 
-                                name_rect_radius, hex_to_reportlab_color(name_rect_color))
-
-                # Draw rotated element name in white
-                c.setFillColor(name_color)
-                c.setFont(name_font_name, name_font_size)
                 c.saveState()
-                c.translate(rect_x + name_rect_width/2, rect_y + name_rect_height/2 + len(element_name)*3)
-                c.rotate(270)  # Rotate 270 degrees (same as -90)
-                name_width = c.stringWidth(element_name, name_font_name, name_font_size)
-                c.drawString(-name_width/2, 0, element_name)
+                path = c.beginPath()
+                path.rect(card_x, card_y, CARD_W, CARD_H)
+                c.clipPath(path, stroke=0, fill=0)
+                draw_rounded_rect(c, pill_x, pill_y, NAME_PILL_WIDTH, NAME_PILL_HEIGHT, NAME_PILL_RADIUS, group_color)
+                # Name text rotated (vertical), centered at half height
+                c.saveState()
+                cx = pill_x + NAME_PILL_WIDTH / 2
+                cy = pill_y + NAME_PILL_HEIGHT / 2
+                c.translate(cx, cy)
+                c.rotate(270)
+                c.setFont(NAME_FONT[0], NAME_FONT[1])
+                c.setFillColor(NAME_TEXT_COLOR)
+                name_w = c.stringWidth(name, NAME_FONT[0], NAME_FONT[1])
+                c.drawString(-name_w / 2, -NAME_FONT[1] / 2 + 15, name)
+                c.restoreState()
                 c.restoreState()
 
-                # 6. Description text - VERTICAL on right side (like reference)
-                desc_text = element_descriptions[element_idx]
-                c.setFillColor(desc_right_color)
-                c.setFont(desc_right_font_name, desc_right_font_size)
+                # --- Draw border after pill so it overlaps ---
+                c.setLineWidth(BORDER_WIDTH)
+                c.setStrokeColor(BORDER_COLOR)
+                c.rect(card_x, card_y, CARD_W, CARD_H, fill=0, stroke=1)
+
+                # 2) top-left circle with atomic number
+                circle_cx = card_x + CIRCLE_OFFSET_X
+                circle_cy = card_y + CARD_H - CIRCLE_OFFSET_Y
+                c.setFillColor(group_color)
+                c.circle(circle_cx, circle_cy, CIRCLE_RADIUS, fill=1, stroke=0)
+                c.setFillColor(CIRCLE_NUMBER_COLOR)
+                c.setFont(CIRCLE_NUMBER_FONT[0], CIRCLE_NUMBER_FONT[1])
+                num_txt = str(atomic_num)
+                tw = c.stringWidth(num_txt, CIRCLE_NUMBER_FONT[0], CIRCLE_NUMBER_FONT[1])
+                c.drawString(circle_cx - tw / 2, circle_cy - (CIRCLE_NUMBER_FONT[1] / 2) + 3, num_txt)
+
+                # 3) TOP CENTER: use text (centered horizontally)
+                c.setFillColor(reportlab_colors.black)
+                c.setFont(USE_FONT[0], USE_FONT[1])
+                u_text = use_text
+                u_w = c.stringWidth(u_text, USE_FONT[0], USE_FONT[1])
+                if u_w > CARD_W * 0.6:
+                    small_size = max(7, int(USE_FONT[1] * (CARD_W * 0.6 / u_w)))
+                    c.setFont(USE_FONT[0], small_size)
+                    u_w = c.stringWidth(u_text, USE_FONT[0], small_size)
+                c.drawString(card_x + CARD_W / 2 - u_w / 2, card_y + CARD_H - USE_Y_OFFSET, u_text)
+
+                # 4) big element symbol (top-right, as before)
+                c.setFont(SYMBOL_FONT[0], SYMBOL_FONT[1])
+                c.setFillColor(reportlab_colors.black)
+                symbol_w = c.stringWidth(symbol, SYMBOL_FONT[0], SYMBOL_FONT[1])
+                symbol_x = card_x + CARD_W - SYMBOL_RIGHT_MARGIN - symbol_w  # right edge fixed margin
+                symbol_y = card_y + CARD_H - SYMBOL_Y_OFFSET + 25
+                c.drawString(symbol_x, symbol_y, symbol)
+
+                # 5) atomic mass right below symbol (same center as symbol)
+                c.setFont(MASS_FONT[0], MASS_FONT[1])
+                c.setFillColor(reportlab_colors.black)
+                # Apply brackets if radioactive
+                if is_radioactive[element_idx]:
+                    mass_display = f"[{mass_text}]"
+                else:
+                    mass_display = mass_text
+                mass_w = c.stringWidth(mass_display, MASS_FONT[0], MASS_FONT[1])
+                mass_x = symbol_x + symbol_w / 2 - mass_w / 2  # center mass under symbol
+                mass_y = symbol_y - (MASS_Y_OFFSET - SYMBOL_Y_OFFSET) + 6
+                c.drawString(mass_x, mass_y, mass_display)
+
+                # 6) centered atomic image
+                img_file = os.path.join(ATOMIC_IMAGES_DIR, f"atom_{atomic_num}_{symbol}.png")
+                atom_size = ATOM_IMAGE_SIZE
+                atom_x = card_x + (CARD_W / 2) - (atom_size / 2)
+                atom_y = card_y + (CARD_H / 2) - (atom_size / 2)
+                if os.path.exists(img_file):
+                    try:
+                        c.drawImage(img_file, atom_x, atom_y, atom_size, atom_size, mask="auto")
+                    except Exception:
+                        pass
+
+                # 7) nuclear icon if radioactive (bottom-right)
+                if is_radioactive[element_idx]:
+                    if os.path.exists(NUCLEAR_ICON_FILE):
+                        icon_x = card_x + CARD_W - NUCLEAR_ICON_SIZE - NUCLEAR_ICON_OFFSET_X
+                        icon_y = card_y + NUCLEAR_ICON_OFFSET_Y
+                        try:
+                            c.drawImage(NUCLEAR_ICON_FILE, icon_x, icon_y, NUCLEAR_ICON_SIZE, NUCLEAR_ICON_SIZE, mask="auto")
+                        except Exception:
+                            pass
+
+                # 8) RIGHT-SIDE vertical description (rotated 90°, centered at half height)
                 c.saveState()
-                c.translate(x + card_width - desc_right_x_offset, y + desc_right_y_center + len(desc_text)*2)
-                c.rotate(270)  # Rotate 270 degrees
-                c.drawString(0, 0, desc_text)
+                tx = card_x + CARD_W - DESC_RIGHT_OFFSET_X
+                ty = card_y + DESC_RIGHT_CENTER_Y
+                c.translate(tx, ty)
+                c.rotate(-90)
+                c.setFont(DESC_RIGHT_FONT[0], DESC_RIGHT_FONT[1])
+                c.setFillColor(reportlab_colors.black)
+                desc_lines = wrap_text(c, desc_right, CARD_H * 0.55, DESC_RIGHT_FONT[0], DESC_RIGHT_FONT[1])
+                desc_lines = desc_lines[:2]
+                total_height = len(desc_lines) * (DESC_RIGHT_FONT[1] + 1)
+                for i, line in enumerate(desc_lines):
+                    line_w = c.stringWidth(line, DESC_RIGHT_FONT[0], DESC_RIGHT_FONT[1])
+                    x = -line_w / 2
+                    y = (len(desc_lines)-i-1) * (DESC_RIGHT_FONT[1] + 1) - total_height/2
+                    c.drawString(x, y, line)
                 c.restoreState()
 
-                # 7. Bottom description text (BOTTOM area - like reference)
-                c.setFillColor(desc_bottom_color)
-                c.setFont(desc_bottom_font_name, desc_bottom_font_size)
-                # Use trivia for bottom text like in reference
-                trivia_text = element_trivia[element_idx]
-                description_lines = wrap_text(c, trivia_text, 
-                                            desc_bottom_max_width, desc_bottom_font_name, desc_bottom_font_size)
-
-                for i, line in enumerate(description_lines[:2]):  # Max 2 lines
-                    c.drawString(
-                        x + desc_bottom_x_margin,
-                        y + desc_bottom_y_from_bottom - (i * (desc_bottom_font_size + 2)),
-                        line
-                    )
+                # 9) BOTTOM trivia (centered, up to TRIVIA_MAX_LINES)
+                c.setFont(TRIVIA_FONT[0], TRIVIA_FONT[1])
+                c.setFillColor(reportlab_colors.black)
+                lines = wrap_text(c, trivia, TRIVIA_MAX_WIDTH, TRIVIA_FONT[0], TRIVIA_FONT[1])
+                lines = lines[:TRIVIA_MAX_LINES]
+                for i, ln in enumerate(reversed(lines)):
+                    y_pos = card_y + TRIVIA_Y_OFFSET + i * (TRIVIA_FONT[1] + 2)
+                    text_w = c.stringWidth(ln, TRIVIA_FONT[0], TRIVIA_FONT[1])
+                    x_pos = card_x + (CARD_W - text_w) / 2 if TRIVIA_X_CENTER else card_x + 12
+                    c.drawString(x_pos, y_pos, ln)
 
                 element_idx += 1
 
         c.showPage()
     c.save()
-    print(f"🎉 PERFECT LAYOUT element cards PDF created: {output_filename}")
-    print(f"📊 Generated {element_idx} cards with EXACT reference layout")
-    print(f"📊 Ultra high resolution atomic images included")
-    return output_filename
+    print(f"PDF saved -> {output_pdf}")
+    return output_pdf
 
-# Example usage:
 if __name__ == "__main__":
-    print("🧪 Element Cards Generator - PERFECT REFERENCE LAYOUT")
-    print("=" * 70)
-    print("🎯 PIXEL PERFECT reproduction of reference image")
-    print(f"🔄 Regenerate images: {'YES' if REGENERATE_ATOMIC_IMAGES else 'NO (will skip if exist)'}")
-    print(f"📊 Number of cards to generate: {NUMBER_OF_CARDS_TO_GENERATE}")
-    print("✅ Features: Green circles, rounded rectangles, vertical text, ultra high res atoms")
-
-    # Generate element cards with PERFECT layout
-    create_element_cards_with_atoms()
-    print("\n🎊 PERFECT layout generation complete!")
+    if not os.path.isdir(ATOMIC_IMAGES_DIR):
+        print(f"Warning: '{ATOMIC_IMAGES_DIR}' folder not found. Atomic images will be skipped.")
+    if not os.path.exists(NUCLEAR_ICON_FILE):
+        print(f"Note: nuclear icon '{NUCLEAR_ICON_FILE}' not found. Radioactive icon will be skipped.")
+    print("Generating element cards PDF with exact layout...")
+    create_cards()
+    print("Done.")

@@ -51,7 +51,7 @@ group_types = [
     # Lanthanides
     "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide",
     "transition metal", "transition metal", "transition metal", "transition metal", "transition metal", "transition metal", "transition metal", "transition metal", "transition metal",
-    "post-transition metal", "post-transition metal", "post-transition metal", "metalloid", "metalloid", "noble gas",
+    "post-transition metal", "post-transition metal", "post-transition metal", "metalloid", "nonmetal", "noble gas",
     "alkali metal", "alkaline earth metal",
     # Actinides
     "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide",
@@ -63,22 +63,19 @@ atomic_numbers = list(range(1, 119))
 
 # Atomic masses (standard atomic weights, approximate)
 atomic_masses = [
-    1.008, 4.0026,
-    6.94, 9.0122, 10.81, 12.011, 14.007, 15.999, 18.998, 20.180,
-    22.990, 24.305, 26.982, 28.085, 30.974, 32.06, 35.45, 39.948,
-    39.098, 40.078, 44.956, 47.867, 50.942, 51.996, 54.938, 55.845, 58.933, 58.693, 63.546, 65.38,
-    69.723, 72.630, 74.922, 78.971, 79.904, 83.798,
-    85.468, 87.62, 88.906, 91.224, 92.906, 95.95, 98, 101.07, 102.91, 106.42, 107.87, 112.41,
-    114.82, 118.71, 121.76, 127.60, 126.90, 131.29,
+    1.0080, 4.0026, 7.0, 9.0122, 10.81, 12.011, 14.007, 15.999, 18.998, 20.18,
+    22.99, 24.305, 26.982, 28.085, 30.974, 32.07, 35.45, 39.9,
+    39.098, 40.08, 44.956, 47.867, 50.942, 51.996, 54.938, 55.84, 58.933, 58.693, 63.55, 65.4,
+    69.723, 72.63, 74.922, 78.97, 79.9, 83.8,
+    85.468, 87.62, 88.906, 91.22, 92.906, 95.95, 96.906, 101.1, 102.91, 106.42, 107.868, 112.41,
+    114.818, 118.71, 121.76, 127.6, 126.905, 131.29,
     132.91, 137.33,
-    # Lanthanides
-    138.91, 140.12, 140.91, 144.24, 145, 150.36, 151.96, 157.25, 158.93, 162.50, 164.93, 167.26, 168.93, 173.05, 174.97,
-    178.49, 180.95, 183.84, 186.21, 190.23, 192.22, 195.08, 196.97, 200.59,
-    204.38, 207.2, 208.98, 209, 210, 222,
-    223, 226,
-    # Actinides
-    227, 232.04, 231.04, 238.03, 237, 244, 243, 247, 247, 251, 252, 257, 258, 259, 262,
-    267, 270, 271, 270, 277, 276, 281, 282, 285, 286, 289, 290, 293, 294, 294
+    138.91, 140.12, 140.91, 144.24, 144.91, 150.4, 151.96, 157.25, 158.93, 162.5, 164.93, 167.26, 168.93, 173.05, 174.97,
+    178.49, 180.95, 183.84, 186.21, 190.2, 192.22, 195.08, 196.97, 200.59,
+    204.38, 207, 208.98, 208.98, 209.99, 222.02,
+    223.02, 226.03,
+    227.03, 232.04, 231.04, 238.03, 237.05, 244.06, 243.06, 247.07, 247.07, 251.08, 252.08, 257.1, 258.1, 259.1, 266.12,
+    267.12, 268.13, 269.13, 270.13, 269.13, 277.15, 282.17, 282.17, 286.18, 286.18, 290.19, 290.2, 293.21, 294.21, 295.22
 ]
 
 # One-word use of each element
@@ -88,16 +85,16 @@ element_uses = [
     "Salt", "Flares", "Cans", "Chips", "Matches", "Gunpowder", "Disinfectant", "Inert",  # Na-Ar
     "Soap", "Bones", "Aerospace", "Implants", "Pigments", "Plating", "Electrodes", "Construction", "Glass", "Currency", "Wiring", "Galvanizing",  # K-Zn
     "LEDs", "Transistors", "Preservatives", "Photoconductors", "Antiseptic", "Windows",  # Ga-Kr
-    "Clocks", "Fireworks", "Lasers", "Ceramics", "Engines", "Lubricants", "Isotope", "Contacts", "Jewelry", "Dentistry", "Photography", "Panels",  # Rb-Cd
-    "Displays", "Solder", "Alloys", "Solar", "Medicine", "Anesthesia",  # In-Xe
+    "Clocks", "Fireworks", "Cladding", "Ceramics", "Superalloys", "Lubricants", "Isotope", "Electronics", "Jewelry", "Dentistry", "Photography", "Panels",  # Rb-Cd
+    "Displays", "Soldering", "Flame-retardant", "Solar", "Medicine", "Anesthesia",  # In-Xe
     "Timekeeping", "Imaging",  # Cs, Ba
     # Lanthanides
-    "Lighters", "Polishing", "Engines", "Speakers", "Batteries", "Reactors", "Phosphors", "Contrast", "Green", "Lasers", "Devices", "Fiber", "Sources", "Sensors", "Catalysis",  # La-Lu
+    "Lighters", "Polishing", "Engines", "Speakers", "Luminous", "Reactors", "Phosphors", "Contrast", "Green", "Lasers", "Devices", "Fiber", "Sources", "Sensors", "Catalysis",  # La-Lu
     "Cutting", "Capacitors", "Filaments", "Coatings", "Contacts", "Plugs", "Refining", "Bullion", "Switches",  # Hf-Hg
-    "Screens", "Radiation", "Cosmetics", "Detectors", "Therapy", "Tracing",  # Tl-Rn
+    "Screens", "Radiation", "Cosmetics", "Antistatic", "Therapy", "Tracing",  # Tl-Rn
     "Experiments", "Treatment",  # Fr, Ra
     # Actinides
-    "Lighting", "Mantles", "Dating", "Weapons", "Detectors", "Power", "Alarms", "Missions", "Cyclotron", "Starters",  # Ac-Cf
+    "Radiotherapy", "Mantles", "Dating", "Weapons", "Detectors", "Power", "Alarms", "Missions", "Cyclotron", "Starters",  # Ac-Cf
     "Research", "Research", "Research", "Research", "Research",  # Es-Lr
     # Superheavies
     "Research", "Research", "Research", "Research", "Research", "Research", "Research", "Research", "Research", "Research", 
@@ -125,7 +122,7 @@ element_descriptions = [
     "Used in pool disinfection and PVC production",  # Cl
     "Used in welding and incandescent light bulbs",  # Ar
     "Used in fertilizers and soap production",  # K
-    "Used in bones, teeth, and concrete production",  # Ca
+    "Used in concrete production and car batteries",  # Ca
     "Used in aerospace alloys and baseball bats",  # Sc
     "Used in aircraft, medical implants, and paints",  # Ti
     "Used in steel alloys and as catalyst",  # V
@@ -188,7 +185,7 @@ element_descriptions = [
     "Used in jewelry, electronics, and dentistry",  # Au
     "Used in thermometers, dental fillings, and switches",  # Hg
     "Used in electronics and medical imaging",  # Tl
-    "Used in car batteries, bullets, and radiation shielding",  # Pb
+    "Used in car batteries, bullets, and radiation shields",  # Pb
     "Used in medicine and cosmetics",  # Bi
     "Used in antistatic devices and neutron sources",  # Po
     "Used in medicine and scientific research",  # At
@@ -234,10 +231,10 @@ element_trivia = [
     "Helium has the lowest boiling point (-269°C) and becomes superfluid with zero viscosity",  # He
     "Lithium is the lightest metal that can float on water while violently reacting with it",  # Li
     "Beryllium is 6 times stronger than steel but weighs only 25% as much, yet highly toxic",  # Be
-    "Boron is the 5th element but essential for plants and harder than most metals when pure",  # B
+    "Boron is the hardest element but essential for plants and harder than most metals when pure",  # B
     "Carbon is highest for 2 hundred million compounds, melting point of 3823K, and over 500 allotropes",  # C
     "Nitrogen makes up 78% of Earth's atmosphere but is completely inert at room temperature",  # N
-    "Oxygen is Earth's most abundant element at 46% of crust mass and paramagnetic liquid",  # O
+    "Oxygen is Earth's most abundant element at 46% of crust mass and paramagnetic both gas and liquid",  # O
     "Fluorine is the most reactive element that can corrode glass and concrete on contact",  # F
     "Neon produces the most intense light discharge creating the classic orange-red glow",  # Ne
     "Sodium lamps are so efficient that one can outshine 100 incandescent bulbs combined",  # Na
@@ -245,7 +242,7 @@ element_trivia = [
     "Aluminum was worth more than gold until 1890s before efficient electrolytic extraction",  # Al
     "Silicon makes up 27% of Earth's crust and enabled the entire computer age revolution",  # Si
     "White phosphorus glows green in darkness but is essential for life despite being toxic",  # P
-    "Sulfur is second for forming 30+ allotropes and creates yellow crystals in volcanic regions",  # S - HINT: Add more unique properties
+    "Sulfur is second for forming 30+ allotropes and creates yellow crystals in volcanic regions",  # S
     "Chlorine has the highest electron affinity (349 kJ/mol) and was WWI's first poison gas",  # Cl
     "Argon was Earth's first isolated noble gas and makes up nearly 1% of our atmosphere",  # Ar
     "Potassium is so violently reactive it ignites spontaneously and must be stored in oil",  # K
@@ -257,7 +254,7 @@ element_trivia = [
     "Manganese nodules carpet vast ocean floors containing trillions of tons of the element",  # Mn
     "Iron comprises 32.1% of Earth's total mass with most concentrated in the molten core",  # Fe
     "Cobalt blue glass has been prized for 4000 years and retains color at 1000°C heat",  # Co
-    "Nickel-iron meteorites delivered much of Earth's accessible nickel from space impacts",  # Ni
+    "Nickel-62 has the highest binding energy per nucleon at 8.8 MeV, making it the most stable isotope",  # Ni
     "Copper naturally kills bacteria and viruses within hours making it self-sterilizing",  # Cu
     "Zinc deficiency causes loss of taste/smell and affects 2 billion people worldwide",  # Zn
     "Gallium melts at 29.8°C in hand temperature but boils at 2400°C with the widest liquid range",  # Ga
@@ -306,7 +303,7 @@ element_trivia = [
     "Tantalum is virtually immune to all acids except hydrofluoric at high temperatures",  # Ta
     "Tungsten has the highest melting point at 3695K and tensile strength of all metals",  # W
     "Rhenium has the highest boiling point at 5869K and is the last stable element found",  # Re
-    "Osmium is the densest element at 22.6 g/cm³ and costs $400 per troy ounce",  # Os
+    "Osmium is the densest element at 22.6 g/cm³ - a cubic centimeter weighs as a golf ball",  # Os
     "Iridium is the most corrosion-resistant element and 2nd densest element at 22.42 g/cm³",  # Ir
     "Platinum is 30 times rarer than gold and catalyzes 20% of all chemical processes",  # Pt
     "Gold is so chemically inert it never tarnishes and has been treasured for 6000 years",  # Au
@@ -322,7 +319,7 @@ element_trivia = [
     # Actinides
     "Actinium glows blue-white in darkness and is 150 times more radioactive than radium",  # Ac
     "Thorium is 3 times more abundant than uranium and could power civilization for millennia",  # Th
-    "Protactinium costs $280/gram making it one of the most expensive elements to obtain",  # Pa
+    "Protactinium is one of the rarest elements, with only about 125 grams found in nature",  # Pa
     "Uranium-235's 1 gram releases energy equal to burning 3 tons of coal completely",  # U
     "Neptunium was the first transuranium element created and is named after planet Neptune",  # Np
     "Plutonium feels warm due to radioactive decay and is illegal for civilians to possess",  # Pu
@@ -340,7 +337,7 @@ element_trivia = [
     "Seaborgium honors Glenn Seaborg, the only living person to have an element named for them",  # Sg
     "Bohrium was named after Niels Bohr who developed quantum mechanical model of atoms",  # Bh
     "Hassium was named after Hesse, Germany where GSI laboratory first synthesized it",  # Hs
-    "Meitnerium honors Lise Meitner who discovered nuclear fission",  # Mt
+    "Meitnerium honors Lise Meitner who theorised nuclear fission",  # Mt
     "Darmstadtium was named after Darmstadt, the latest city to receive elemental recognition",  # Ds
     "Roentgenium honors X-ray discoverer Wilhelm Röntgen though it doesn't emit X-rays",  # Rg
     "Copernicium was named after Copernicus who placed the Sun at the solar system's center",  # Cn

@@ -8,7 +8,7 @@ import math
 import os
 from data import (symbols, names, atomic_numbers, atomic_masses, group_types,
                   element_uses, element_descriptions, element_trivia, is_radioactive,
-                  element_group_colors)
+                  element_group_colors, element_states)
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
@@ -22,7 +22,7 @@ PAGE_W, PAGE_H = PAGE_SIZE
 GRID = "4x5"
 NUM_COLS, NUM_ROWS = map(int, GRID.split("x"))
 NUM_PER_PAGE = NUM_COLS * NUM_ROWS
-NUM_CARDS = 118
+NUM_CARDS = 51
 
 OUTPUT_PDF = f"element_cards_PERFECT_{NUM_CARDS}_cards_{GRID}.pdf"
 ATOMIC_IMAGES_DIR = "atomic_images"
@@ -42,21 +42,27 @@ CIRCLE_NUMBER_COLOR = reportlab_colors.black
 
 # Symbol and mass (centered horizontally)
 SYMBOL_FONT = ("Oxygen-Bold", 28)
-SYMBOL_Y_OFFSET = 48  # distance from top of card to symbol baseline
-SYMBOL_RIGHT_MARGIN = 4  # distance from right edge of card to right edge of symbol
+SYMBOL_Y_OFFSET = 50  # distance from top of card to symbol baseline
+SYMBOL_RIGHT_MARGIN_1LETTER = 18  # More space for 1-letter symbols
+SYMBOL_RIGHT_MARGIN_2LETTER = 10  # Less space for 2-letter symbols
 
 MASS_FONT = ("Oxygen", 8)
-MASS_Y_OFFSET = 68  # distance from top of card to mass baseline
+MASS_Y_OFFSET = 70  # distance from top of card to mass baseline
+MASS_RIGHT_MARGIN_1LETTER = 10    # Match symbol margin for mass
+MASS_RIGHT_MARGIN_2LETTER = 12
 
 # Use text (top-center, centered horizontally)
-USE_FONT = ("Oxygen", 12)
+USE_FONT = ("Oxygen", 11)
 USE_Y_OFFSET = 15  # distance from top of card to use text baseline
+USE_FONT_SCALER_1 = 10  # For 15-character use texts
 
 # Name pill (left vertical half-round, centered at half height)
-NAME_PILL_WIDTH = 48
+NAME_PILL_WIDTH = 58
 NAME_PILL_HEIGHT = CARD_H * 0.6
 NAME_PILL_RADIUS = NAME_PILL_WIDTH / 2
-NAME_PILL_OFFSET_X = -NAME_PILL_WIDTH / 2
+NAME_PILL_CENTER_X = 0  # Where the pill's center is (mostly outside card)
+NAME_PILL_OFFSET_X = NAME_PILL_CENTER_X - NAME_PILL_WIDTH / 2
+NAME_TEXT_CENTER_X = 14  # Center of the visible part inside the card
 NAME_PILL_OFFSET_Y = (CARD_H - NAME_PILL_HEIGHT) / 2
 
 NAME_FONT = ("Oxygen", 15)
@@ -76,7 +82,7 @@ NUCLEAR_ICON_OFFSET_Y = 4
 # Right-side vertical description (centered at half height)
 DESC_RIGHT_FONT = ("Oxygen", 8)
 DESC_RIGHT_OFFSET_X = 12
-DESC_RIGHT_CENTER_Y = CARD_H / 2
+DESC_RIGHT_CENTER_Y = CARD_H / 2 - 4
 
 # Bottom trivia (centered)
 TRIVIA_FONT = ("Oxygen", 8)
@@ -84,6 +90,12 @@ TRIVIA_Y_OFFSET = 5
 TRIVIA_MAX_LINES = 3
 TRIVIA_MAX_WIDTH = CARD_W - 24
 TRIVIA_X_CENTER = True
+
+# === State colors (hex, easy to change) ===
+STATE_COLOR_SOLID = "#000000"      # Black
+STATE_COLOR_LIQUID = "#0D47A1"     # Dark blue
+STATE_COLOR_GAS = "#FFD600"        # Dark yellow
+STATE_COLOR_UNKNOWN = "#D50000"    # Red
 
 # Helper: convert hex color to reportlab color
 def hex_to_color(hexcolor):
@@ -117,6 +129,28 @@ def wrap_text(c, text, max_width, font_name, font_size):
     if cur:
         lines.append(" ".join(cur))
     return lines
+
+def draw_string_with_percent_fallback(c, x, y, text, font_name, font_size):
+    """Draws text, using fallback font for percent sign."""
+    fallback_font = 'Helvetica'  # Use a standard PDF font for percent
+    cur_x = x
+    for char in text:
+        if char == '%':
+            c.setFont(fallback_font, font_size)
+        else:
+            c.setFont(font_name, font_size)
+        c.drawString(cur_x, y, char)
+        cur_x += c.stringWidth(char, c._fontname, font_size)
+
+def get_symbol_color(state):
+    if state == "solid":
+        return hex_to_color(STATE_COLOR_SOLID)
+    elif state == "liquid":
+        return hex_to_color(STATE_COLOR_LIQUID)
+    elif state == "gas":
+        return hex_to_color(STATE_COLOR_GAS)
+    else:
+        return hex_to_color(STATE_COLOR_UNKNOWN)
 
 def create_cards(output_pdf=OUTPUT_PDF, num_cards=NUM_CARDS, grid=f"{NUM_COLS}x{NUM_ROWS}"):
     cols, rows = map(int, grid.split("x"))
@@ -153,16 +187,20 @@ def create_cards(output_pdf=OUTPUT_PDF, num_cards=NUM_CARDS, grid=f"{NUM_COLS}x{
                 path.rect(card_x, card_y, CARD_W, CARD_H)
                 c.clipPath(path, stroke=0, fill=0)
                 draw_rounded_rect(c, pill_x, pill_y, NAME_PILL_WIDTH, NAME_PILL_HEIGHT, NAME_PILL_RADIUS, group_color)
-                # Name text rotated (vertical), centered at half height
+                # Name text rotated (vertical), centered at half height, with proper vertical centering for all font sizes
                 c.saveState()
-                cx = pill_x + NAME_PILL_WIDTH / 2
+                cx = card_x + NAME_TEXT_CENTER_X  # Use new variable for text center
                 cy = pill_y + NAME_PILL_HEIGHT / 2
                 c.translate(cx, cy)
                 c.rotate(270)
-                c.setFont(NAME_FONT[0], NAME_FONT[1])
+                # Determine font size
+                font_size = NAME_FONT[1]
+                if len(name) > 11:
+                    font_size = NAME_FONT[1] - 2
+                c.setFont(NAME_FONT[0], font_size)
                 c.setFillColor(NAME_TEXT_COLOR)
-                name_w = c.stringWidth(name, NAME_FONT[0], NAME_FONT[1])
-                c.drawString(-name_w / 2, -NAME_FONT[1] / 2 + 15, name)
+                name_w = c.stringWidth(name, NAME_FONT[0], font_size)
+                c.drawString(-name_w / 2, -font_size / 2, name)
                 c.restoreState()
                 c.restoreState()
 
@@ -187,30 +225,51 @@ def create_cards(output_pdf=OUTPUT_PDF, num_cards=NUM_CARDS, grid=f"{NUM_COLS}x{
                 c.setFont(USE_FONT[0], USE_FONT[1])
                 u_text = use_text
                 u_w = c.stringWidth(u_text, USE_FONT[0], USE_FONT[1])
+                font_size = USE_FONT[1]
+                # Apply scalers for long use texts
+                if u_text == 'Photoconductors' or u_text == 'Flame-retardant':
+                    font_size = USE_FONT_SCALER_1
+                # Fallback for very wide text
                 if u_w > CARD_W * 0.6:
-                    small_size = max(7, int(USE_FONT[1] * (CARD_W * 0.6 / u_w)))
-                    c.setFont(USE_FONT[0], small_size)
-                    u_w = c.stringWidth(u_text, USE_FONT[0], small_size)
-                c.drawString(card_x + CARD_W / 2 - u_w / 2, card_y + CARD_H - USE_Y_OFFSET, u_text)
+                    font_size = max(7, int(USE_FONT[1] * (CARD_W * 0.6 / u_w)))
+                c.setFont(USE_FONT[0], font_size)
+                u_w = c.stringWidth(u_text, USE_FONT[0], font_size)
+                draw_string_with_percent_fallback(
+                    c,
+                    card_x + CARD_W / 2 - u_w / 2,
+                    card_y + CARD_H - USE_Y_OFFSET,
+                    u_text,
+                    USE_FONT[0],
+                    font_size
+                )
 
-                # 4) big element symbol (top-right, as before)
-                c.setFont(SYMBOL_FONT[0], SYMBOL_FONT[1])
-                c.setFillColor(reportlab_colors.black)
-                symbol_w = c.stringWidth(symbol, SYMBOL_FONT[0], SYMBOL_FONT[1])
-                symbol_x = card_x + CARD_W - SYMBOL_RIGHT_MARGIN - symbol_w  # right edge fixed margin
-                symbol_y = card_y + CARD_H - SYMBOL_Y_OFFSET + 25
-                c.drawString(symbol_x, symbol_y, symbol)
+                # --- 4 & 5: SYMBOL AND MASS, CENTER-ALIGNED ---
 
-                # 5) atomic mass right below symbol (same center as symbol)
-                c.setFont(MASS_FONT[0], MASS_FONT[1])
-                c.setFillColor(reportlab_colors.black)
-                # Apply brackets if radioactive
+                # Prepare mass display and margin
                 if is_radioactive[element_idx]:
                     mass_display = f"[{mass_text}]"
                 else:
                     mass_display = mass_text
                 mass_w = c.stringWidth(mass_display, MASS_FONT[0], MASS_FONT[1])
-                mass_x = symbol_x + symbol_w / 2 - mass_w / 2  # center mass under symbol
+                if len(symbol) == 1:
+                    mass_margin = MASS_RIGHT_MARGIN_1LETTER
+                else:
+                    mass_margin = MASS_RIGHT_MARGIN_2LETTER
+                mass_x = card_x + CARD_W - mass_margin - mass_w
+
+                # Symbol: center it above the mass
+                c.setFont(SYMBOL_FONT[0], SYMBOL_FONT[1])
+                state = element_states[element_idx]
+                symbol_color = get_symbol_color(state)
+                c.setFillColor(symbol_color)  # <-- set color based on state
+                symbol_w = c.stringWidth(symbol, SYMBOL_FONT[0], SYMBOL_FONT[1])
+                symbol_center_x = mass_x + mass_w / 2
+                symbol_x = symbol_center_x - symbol_w / 2
+                symbol_y = card_y + CARD_H - SYMBOL_Y_OFFSET + 25
+                c.drawString(symbol_x, symbol_y, symbol)
+
+                # Mass: draw below symbol, right-aligned as before
+                c.setFont(MASS_FONT[0], MASS_FONT[1])
                 mass_y = symbol_y - (MASS_Y_OFFSET - SYMBOL_Y_OFFSET) + 6
                 c.drawString(mass_x, mass_y, mass_display)
 
@@ -262,7 +321,14 @@ def create_cards(output_pdf=OUTPUT_PDF, num_cards=NUM_CARDS, grid=f"{NUM_COLS}x{
                     y_pos = card_y + TRIVIA_Y_OFFSET + i * (TRIVIA_FONT[1] + 2)
                     text_w = c.stringWidth(ln, TRIVIA_FONT[0], TRIVIA_FONT[1])
                     x_pos = card_x + (CARD_W - text_w) / 2 if TRIVIA_X_CENTER else card_x + 12
-                    c.drawString(x_pos, y_pos, ln)
+                    draw_string_with_percent_fallback(
+                        c,
+                        x_pos,
+                        y_pos,
+                        ln,
+                        TRIVIA_FONT[0],
+                        TRIVIA_FONT[1]
+                    )
 
                 element_idx += 1
 

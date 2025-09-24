@@ -51,7 +51,7 @@ group_types = [
     # Lanthanides
     "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide", "lanthanide",
     "transition metal", "transition metal", "transition metal", "transition metal", "transition metal", "transition metal", "transition metal", "transition metal", "transition metal",
-    "post-transition metal", "post-transition metal", "post-transition metal", "metalloid", "nonmetal", "noble gas",
+    "post-transition metal", "post-transition metal", "post-transition metal", "post-transition metal", "nonmetal", "noble gas",
     "alkali metal", "alkaline earth metal",
     # Actinides
     "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide", "actinide",
@@ -78,6 +78,26 @@ atomic_masses = [
     267.12, 268.13, 269.13, 270.13, 269.13, 277.15, 282.17, 282.17, 286.18, 286.18, 290.19, 290.2, 293.21, 294.21, 295.22
 ]
 
+element_states = [
+    "gas", "gas",
+    "solid", "solid", "solid", "solid", "gas", "gas", "gas", "gas",
+    "solid", "solid", "solid", "solid", "solid", "solid", "gas", "gas",
+    "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid",
+    "solid", "solid", "solid", "solid", "liquid", "gas",
+    "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid",
+    "solid", "solid", "solid", "solid", "gas", "gas",
+    "solid", "solid",
+    # Lanthanides
+    "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid",
+    "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "liquid",
+    "solid", "solid", "solid", "solid", "solid", "gas",
+    "solid", "solid",
+    # Actinides
+    "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid", "solid",
+    "unknown", "unknown", "unknown", "unknown", "unknown", "unknown", "unknown", "unknown", "unknown", "unknown", "unknown", "unknown", "unknown", "unknown", "unknown"
+]
+
+
 # One-word use of each element
 element_uses = [
     "Fuel", "Balloons",  # H, He
@@ -88,6 +108,7 @@ element_uses = [
     "Clocks", "Fireworks", "Cladding", "Ceramics", "Superalloys", "Lubricants", "Isotope", "Electronics", "Jewelry", "Dentistry", "Photography", "Panels",  # Rb-Cd
     "Displays", "Soldering", "Flame-retardant", "Solar", "Medicine", "Anesthesia",  # In-Xe
     "Timekeeping", "Imaging",  # Cs, Ba
+    
     # Lanthanides
     "Lighters", "Polishing", "Engines", "Speakers", "Luminous", "Reactors", "Phosphors", "Contrast", "Green", "Lasers", "Devices", "Fiber", "Sources", "Sensors", "Catalysis",  # La-Lu
     "Cutting", "Capacitors", "Filaments", "Coatings", "Contacts", "Plugs", "Refining", "Bullion", "Switches",  # Hf-Hg
@@ -228,7 +249,7 @@ element_descriptions = [
 # Trivia/facts about each element (85-100 characters with superlatives and comparisons)
 element_trivia = [
     "Hydrogen is the lightest element and makes up 73.9% of the universe's visible matter",  # H
-    "Helium has the lowest boiling point (-269°C) and becomes superfluid with zero viscosity",  # He
+    "Helium has the lowest boiling point at 4.22K and becomes superfluid with zero viscosity",  # He
     "Lithium is the lightest metal that can float on water while violently reacting with it",  # Li
     "Beryllium is 6 times stronger than steel but weighs only 25% as much, yet highly toxic",  # Be
     "Boron is the hardest element but essential for plants and harder than most metals when pure",  # B
@@ -241,7 +262,7 @@ element_trivia = [
     "Magnesium burns with 3000K white light so bright it can cause permanent eye damage",  # Mg
     "Aluminum was worth more than gold until 1890s before efficient electrolytic extraction",  # Al
     "Silicon makes up 27% of Earth's crust and enabled the entire computer age revolution",  # Si
-    "White phosphorus glows green in darkness but is essential for life despite being toxic",  # P
+    "Phosphorus colored white glows green in darkness but is essential for life despite being toxic",  # P
     "Sulfur is second for forming 30+ allotropes and creates yellow crystals in volcanic regions",  # S
     "Chlorine has the highest electron affinity (349 kJ/mol) and was WWI's first poison gas",  # Cl
     "Argon was Earth's first isolated noble gas and makes up nearly 1% of our atmosphere",  # Ar
@@ -260,24 +281,24 @@ element_trivia = [
     "Gallium melts at 29.8°C in hand temperature but boils at 2400°C with the widest liquid range",  # Ga
     "Germanium was predicted by Mendeleev 15 years before discovery with exact properties",  # Ge
     "Arsenic has been humanity's poison of choice for over 2000 years earning 'King of Poisons'",  # As
-    "Selenium deficiency causes fatal white muscle disease and is toxic in excess amounts",  # Se
+    "Selenium deficiency causes fatal white muscle disease but it is toxic in excess amounts",  # Se
     "Bromine is the only liquid non-metal but it evaporates quickly from 1 mL to 3 liters of toxic gas",  # Br
     "Krypton was used in ultra-bright airport runway lighting systems and old camera flashes",  # Kr
     "Rubidium ignites spontaneously in air and was used in early vacuum tubes for electronics",  # Rb
     "Strontium-90 fallout creates the brilliant red in fireworks but is dangerously radioactive",  # Sr
-    "Yttrium with barium carbon oxide named YBCO makes the highest temperature superconductors at 92K",  # Y
+    "Yttrium with barium carbon oxide or YBCO makes the highest temperature superconductors at 92K",  # Y
     "Zirconium is virtually immune to corrosion up to 1270K and used in nuclear reactors",  # Zr
     "Niobium is superconducting below 9K and was originally called columbium in America",  # Nb
     "Molybdenum has the 6th highest melting point at 2896K and strengthens steel dramatically",  # Mo
     "Technetium was the first artificially created element filling Mendeleev's predicted gap",  # Tc
-    "Ruthenium is the scarcest platinum group metal and costs $1600 per troy ounce",  # Ru
-    "Rhodium is the most expensive precious metal at $14,000+ per ounce, rarer than gold",  # Rh
+    "Ruthenium is the scarcest platinum group metal ",  # Ru
+    "Rhodium is the most expensive precious metal at about $250 per gram, rarer than gold",  # Rh
     "Palladium can absorb 900 times its volume in hydrogen like a metallic sponge",  # Pd
     "Silver has the highest electrical conductivity of all elements at room temperature",  # Ag
     "Cadmium red paint was banned after causing severe poisoning in artists for decades",  # Cd
     "Indium is softer than lead and can be scratched with a fingernail despite being metal",  # In
     "Tin produces a distinctive 'tin cry' scream when bent due to crystal twinning",  # Sn
-    "Fluoroantimonic acid is 10 quintillion times stronger than sulfuric acid - the strongest known",  # Sb
+    "Antimony makes Fluoroantimonic acid, the strongest, 10 quintillion times stronger than sulfuric acid",  # Sb
     "Tellurium-128 has the longest known half-life at 2.2 septillion years - nearly stable",  # Te
     "Iodine deficiency affects 2 billion people causing goiter and developmental disability",  # I
     "Xenon is the rarest gas with 90 grams per million kilograms of air",  # Xe
@@ -291,20 +312,20 @@ element_trivia = [
     "Promethium is the only radioactive rare earth and powers space missions for decades",  # Pm
     "Samarium magnets work at 350°C and have the highest neutron absorption cross-section",  # Sm
     "Europium is the softest rare earth and the most reactive, tarnishing rapidly in air",  # Eu
-    "Gadolinium has the highest magnetic moment and is used in MRI contrast enhancement",  # Gd
-    "Terbium glows intense green under UV and is essential for energy-efficient lighting",  # Tb
+    "Gadolinium has the highest magnetic moment, capturing thermal neutrons like a magnet",  # Gd
+    "Terbium shows strong magnetostrictive strength, changing shape powerfully under magnetic fields",  # Tb
     "Dysprosium becomes strongly magnetic only below -180°C with highest magnetic strength",  # Dy
-    "Holmium possesses the strongest magnetic field of any element at 4.5 Tesla saturation",  # Ho
+    "Holmium has the strongest magnetic field at 4.5 Tesla saturation, 90,000 times than Earth's field",  # Ho
     "Erbium amplifies light in fiber optic cables enabling global internet communications",  # Er
     "Thulium is the least abundant rare earth metal and possibly the most useless natural element",  # Tm
-    "Ytterbium expands 26% during phase transition and is used in atomic clocks",  # Yb
+    "Ytterbium expands by 26% during its phase transition, a powerful structural change among metals",  # Yb
     "Lutetium is the hardest, densest rare earth and was the last lanthanide discovered",  # Lu
     "Hafnium has nearly identical properties to zirconium due to lanthanide contraction",  # Hf
     "Tantalum is virtually immune to all acids except hydrofluoric at high temperatures",  # Ta
     "Tungsten has the highest melting point at 3695K and tensile strength of all metals",  # W
     "Rhenium has the highest boiling point at 5869K and is the last stable element found",  # Re
-    "Osmium is the densest element at 22.6 g/cm³ - a cubic centimeter weighs as a golf ball",  # Os
-    "Iridium is the most corrosion-resistant element and 2nd densest element at 22.42 g/cm³",  # Ir
+    "Osmium is the densest element at 22.6 g/cubic centimeter - a cubic centimeter weighs as a golf ball",  # Os
+    "Iridium is the most corrosion-resistant element and 2nd densest element at 22.42 g/cubic centimeter",  # Ir
     "Platinum is 30 times rarer than gold and catalyzes 20% of all chemical processes",  # Pt
     "Gold is so chemically inert it never tarnishes and has been treasured for 6000 years",  # Au
     "Mercury is the only metal liquid at room temperature and expands linearly with heat",  # Hg
@@ -313,8 +334,8 @@ element_trivia = [
     "Bismuth forms spectacular rainbow-colored oxide crystals and expands when solidifying",  # Bi
     "Polonium is 250 billion times more toxic than cyanide and the most radioactive natural element",  # Po
     "Astatine is Earth's rarest element with less than 1 gram existing at any time",  # At
-    "Radon gas seepage causes 21,000 lung cancer deaths annually in the US alone",  # Rn
-    "Francium is the most reactive metal with largest atomic radius and shortest half-life of 22 minutes",  # Fr
+    "Radon gas is the only radioactive gas that causes 21,000 lung cancer deaths annually in the US",  # Rn
+    "Francium has most reactivity, largest atomic radii, shortest half-life of 22 min at $7 per nanogram",  # Fr
     "Radium was worth more than gold and glowed green due to intense radioactive decay",  # Ra
     # Actinides
     "Actinium glows blue-white in darkness and is 150 times more radioactive than radium",  # Ac
